@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watermark Remover</title>
+<meta name="description" content="A free Linux app that removes site watermarks and logos from Urdu books and other PDFs without touching the text. Works offline.">
+<meta property="og:title" content="Watermark Remover">
+<meta property="og:description" content="Remove the watermark. Keep the book. A free Linux app for PDFs and scanned pages.">
+<meta property="og:image" content="img/after.webp">
+<link rel="icon" href="img/icon-64.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --desk: #e9edf1;
+  --paper: #ffffff;
+  --ink: #141a26;
+  --muted: #566173;
+  --rule: #cfd6df;
+  --blue: #2350d6;
+  --blue-deep: #1a3fae;
+  --stamp: #d42a2a;
+  --code-bg: #141a26;
+  --code-ink: #e6ebf2;
+  --measure: 34rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --desk: #12151b; --paper: #1b1f27; --ink: #e8ecf2; --muted: #9aa4b4;
+    --rule: #2e3440; --blue: #6c95ff; --blue-deep: #8eadff; --code-bg: #0a0c10;
+  }
+}
+:root[data-theme="dark"] {
+  --desk: #12151b; --paper: #1b1f27; --ink: #e8ecf2; --muted: #9aa4b4;
+  --rule: #2e3440; --blue: #6c95ff; --blue-deep: #8eadff; --code-bg: #0a0c10;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--desk); color: var(--ink);
+  font: 400 1.0625rem/1.6 "Bricolage Grotesque", system-ui, sans-serif;
+  font-optical-sizing: auto;
+}
+img { max-width: 100%; display: block; }
+main { overflow-x: clip; }
+a { color: var(--blue); }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible + .handle {
+  outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 4px;
+}
+.wrap { max-width: 72rem; margin: 0 auto; padding: 0 1rem; }
+@media (min-width: 48rem) { .wrap { padding: 0 2rem; } }
+
+/* top bar */
+.bar { display: flex; align-items: center; justify-content: space-between; padding-block: 1.25rem; }
+.brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; color: var(--ink); text-decoration: none; }
+.brand img { width: 32px; height: 32px; }
+.bar nav { display: flex; gap: 1.5rem; font-size: .95rem; }
+.bar nav a { color: var(--muted); text-decoration: none; }
+.bar nav a:hover { color: var(--ink); }
+@media (max-width: 40rem) { .bar nav a:not(.keep) { display: none; } }
+
+/* hero */
+.hero { display: grid; gap: 2.5rem; padding-block: 2rem 5rem; align-items: center; }
+@media (min-width: 60rem) { .hero { grid-template-columns: 1fr 1.05fr; gap: 4rem; padding-top: 3rem; } }
+h1 {
+  font-weight: 800; font-size: clamp(2.6rem, 6.4vw, 4.6rem); line-height: .98;
+  letter-spacing: -.035em; margin: 0;
+}
+.urdu {
+  font-family: "Noto Nastaliq Urdu", serif; direction: rtl; text-align: right;
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem); line-height: 2.3; color: var(--muted); text-wrap: balance;
+  margin: 1.1rem 0 0; max-width: 32rem;
+}
+.lede { max-width: var(--measure); margin: 1.25rem 0 2rem; color: var(--muted); font-size: 1.15rem; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; }
+.btn {
+  display: inline-block; background: var(--blue); color: #fff; text-decoration: none;
+  font-weight: 600; padding: .9rem 1.4rem; border-radius: 8px; font-size: 1.05rem;
+}
+.btn:hover { background: var(--blue-deep); }
+.small { font-size: .9rem; color: var(--muted); }
+
+/* before/after page */
+.compare { position: relative; margin: 0; }
+.sheet {
+  position: relative; aspect-ratio: 420 / 595; max-width: 30rem; margin: 0 auto;
+  background: #fff; box-shadow: 0 1px 2px rgba(20,26,38,.12), 0 18px 40px -12px rgba(20,26,38,.28);
+  transform: rotate(-1.2deg); overflow: hidden; touch-action: pan-y;
+}
+.sheet img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.sheet .before { clip-path: inset(0 calc(100% - var(--pos, 50%)) 0 0); }
+.divider {
+  position: absolute; top: 0; bottom: 0; left: var(--pos, 50%); width: 2px; margin-left: -1px;
+  background: var(--blue); pointer-events: none;
+}
+.handle {
+  position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px;
+  border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center;
+  box-shadow: 0 4px 12px rgba(35,80,214,.4);
+}
+.handle svg { width: 22px; height: 22px; }
+.sheet input[type=range] {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize;
+}
+.tag {
+  position: absolute; top: .75rem; font-size: .8rem; font-weight: 600; padding: .2rem .55rem;
+  border-radius: 4px; background: rgba(20,26,38,.78); color: #fff; pointer-events: none;
+}
+.tag.l { left: .75rem; } .tag.r { right: .75rem; }
+.compare figcaption { text-align: center; margin-top: 1.4rem; }
+
+/* sections */
+section { padding: 4.5rem 0; border-top: 1px solid var(--rule); }
+h2 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 800; letter-spacing: -.025em; line-height: 1.1; margin: 0 0 1rem; }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 0 0 .35rem; letter-spacing: -.01em; }
+.intro { max-width: var(--measure); color: var(--muted); margin: 0 0 2.5rem; }
+
+.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 2rem; counter-reset: s; }
+@media (min-width: 48rem) { .steps { grid-template-columns: repeat(3, 1fr); } }
+.steps li { counter-increment: s; }
+.steps li::before {
+  content: counter(s); display: block; font-size: 3.2rem; font-weight: 800; line-height: 1;
+  color: var(--blue); margin-bottom: .6rem; letter-spacing: -.04em;
+}
+.steps p, .feats p { margin: 0; color: var(--muted); }
+
+.shot { margin: 3.5rem 0 0; }
+.shot img { border-radius: 10px; border: 1px solid var(--rule); box-shadow: 0 18px 40px -18px rgba(20,26,38,.35); }
+.shot figcaption { margin-top: .8rem; }
+
+.feats { display: grid; gap: 2rem 3rem; }
+@media (min-width: 48rem) { .feats { grid-template-columns: 1fr 1fr; } }
+.feats div { border-left: 3px solid var(--rule); padding-left: 1.1rem; }
+.feats div.key { border-left-color: var(--blue); }
+
+/* download */
+.dl { display: grid; gap: 2.5rem; }
+@media (min-width: 56rem) { .dl { grid-template-columns: 1fr 1.1fr; align-items: start; } }
+.dl ul { padding-left: 1.2rem; color: var(--muted); margin: 1.5rem 0 0; }
+.dl li { margin-bottom: .3rem; }
+pre {
+  margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+  padding: 1.25rem 1.4rem; overflow-x: auto; font: .92rem/1.75 ui-monospace, "DejaVu Sans Mono", monospace;
+}
+pre .c { color: #8a96a8; }
+
+/* faq */
+details { border-bottom: 1px solid var(--rule); padding: 1.1rem 0; max-width: 46rem; }
+details:first-of-type { border-top: 1px solid var(--rule); }
+summary { cursor: pointer; font-weight: 600; font-size: 1.1rem; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--blue); font-weight: 400; font-size: 1.4rem; line-height: 1; }
+details[open] summary::after { content: "–"; }
+details p { color: var(--muted); margin: .7rem 0 0; max-width: var(--measure); }
+
+footer { border-top: 1px solid var(--rule); padding: 2rem 0 3rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet.intro-run .before, .sheet.intro-run .divider, .sheet.intro-run .handle { transition: clip-path .9s cubic-bezier(.6,0,.2,1), left .9s cubic-bezier(.6,0,.2,1); }
+}
+</style>
+</head>
+<body>
+<header class="wrap bar">
+  <a class="brand" href="#"><img src="img/icon-64.png" alt="">Watermark Remover</a>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#faq">Questions</a>
+    <a class="keep" href="#download">Download</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <h1>Remove the watermark. Keep the book.</h1>
+      <p class="urdu" lang="ur">واٹر مارک ہٹائیں، کتاب جوں کی توں رہے</p>
+      <p class="lede">A free Linux app that takes site URLs and logos off your PDFs and scanned pages. In most PDFs it deletes only the watermark, so the text, the Urdu script and the colours stay exactly as they were.</p>
+      <div class="cta">
+        <a class="btn" href="https://github.com/Hssnurrahman/watermark-remover/releases/latest/download/WatermarkRemover-linux-x86_64.tar.gz">Download for Linux</a>
+        <span class="small">Free, works offline, 165 MB</span>
+      </div>
+    </div>
+
+    <figure class="compare">
+      <div class="sheet" id="sheet">
+        <img src="img/after.webp" alt="The same page after cleaning: only the Urdu verses remain." width="714" height="1011">
+        <img class="before" src="img/before.webp" alt="A page of Urdu verses with a blue logo and a red website address stamped over it." width="714" height="1011">
+        <span class="tag l">Original</span><span class="tag r">Cleaned</span>
+        <div class="divider"><span class="handle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6M15 6l6 6-6 6"/></svg></span></div>
+        <input type="range" min="0" max="100" value="50" id="slider" aria-label="Drag to compare the original and cleaned page">
+      </div>
+      <figcaption class="small">Drag across the page. The cleaned side is the app's real output.</figcaption>
+    </figure>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>Three steps, no settings to learn</h2>
+      <p class="intro">Open the app, give it your files, and it works out what kind of watermark each one has.</p>
+      <ol class="steps">
+        <li><h3>Add your files</h3><p>Drop in PDFs or images, or a whole folder with its subfolders.</p></li>
+        <li><h3>Check the preview</h3><p>See the original and the result side by side, page by page, before saving anything.</p></li>
+        <li><h3>Clean</h3><p>Each file is saved next to the original as <em>name_clean.pdf</em>. Your originals stay as they are.</p></li>
+      </ol>
+      <figure class="shot">
+        <img src="img/app.webp" alt="The Watermark Remover window, with the original page on the left and the cleaned result on the right." width="1360" height="820" loading="lazy">
+        <figcaption class="small">“Lossless” means the app found the watermark as a separate object and removed only that.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Made for books, not photos</h2>
+      <p class="intro">Built for pages of dark text on light paper, like the Urdu novels that download sites stamp on every page.</p>
+      <div class="feats">
+        <div class="key"><h3>Original text quality</h3><p>In PDFs exported from Word or InPage, the watermark is a separate image. The app deletes it and leaves the text untouched, so you can still select it and the file often gets smaller.</p></div>
+        <div class="key"><h3>Colours stay</h3><p>Only images that repeat over the text on many pages are removed. Covers, pictures, headers and borders keep their colour.</p></div>
+        <div><h3>Scanned books too</h3><p>For scans, the app finds where the watermark sits across pages and cleans just that area. Two sliders adjust strength and text boldness.</p></div>
+        <div><h3>Add your own watermark</h3><p>Stamp your own text, in Urdu or any language, or your logo. Set its size, angle, opacity and position.</p></div>
+        <div><h3>Design a new cover</h3><p>Replace page 1 with your own image or colour, plus a title and author. The app remembers your last design for the next book.</p></div>
+        <div><h3>Private by design</h3><p>Everything runs on your computer. Nothing is uploaded, and you don't need an account or an internet connection.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="download">
+    <div class="wrap dl">
+      <div>
+        <h2>Download</h2>
+        <p class="intro" style="margin-bottom:1.5rem">One file, no Python or other setup needed. Installing adds it to your app menu without asking for an admin password.</p>
+        <a class="btn" href="https://github.com/Hssnurrahman/watermark-remover/releases/latest/download/WatermarkRemover-linux-x86_64.tar.gz">Download for Linux (x86_64)</a>
+        <ul>
+          <li>Ubuntu 24.04, Linux Mint 22, Zorin OS 18 or newer</li>
+          <li>Any 64-bit Linux with glibc 2.39 or later</li>
+          <li>Windows and macOS versions aren't available yet</li>
+        </ul>
+      </div>
+      <pre><span class="c"># unpack the download</span>
+tar xzf WatermarkRemover-linux-x86_64.tar.gz
+cd WatermarkRemover-linux-x86_64
+
+<span class="c"># add it to your app menu</span>
+./install.sh
+
+<span class="c"># or run it without installing</span>
+./WatermarkRemover/WatermarkRemover
+
+<span class="c"># remove it later</span>
+./uninstall.sh</pre>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>Questions</h2>
+      <details>
+        <summary>Will the text look worse after cleaning?</summary>
+        <p>Not for most PDFs. If the app shows “Lossless — original quality kept”, it only deleted the watermark objects and the text is the original. For scanned pages it rebuilds the image, and you can fine-tune the result with the Strength and Text boldness sliders.</p>
+      </details>
+      <details>
+        <summary>Does it work with Urdu, Hindi or Arabic books?</summary>
+        <p>Yes. The app removes the watermark without reading the text, so the language and script don't matter. Your own watermark and cover text can be in Urdu too.</p>
+      </details>
+      <details>
+        <summary>Can it clean a whole folder of books at once?</summary>
+        <p>Yes. Add a folder, choose an output folder if you like, and press Clean all. The folder structure is copied to the output.</p>
+      </details>
+      <details>
+        <summary>My cover is in colour. Will it turn black and white?</summary>
+        <p>No. In digital PDFs, pictures that appear only once are kept. With scans, tick “Keep this page unchanged” on any page you want left as it is.</p>
+      </details>
+      <details>
+        <summary>Is there a Windows version?</summary>
+        <p>Not yet. The app currently runs on Linux.</p>
+      </details>
+      <details>
+        <summary>Can I remove any watermark I like?</summary>
+        <p>Use it on documents you own or have permission to change. Watermarks often show who holds the rights to a book.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap small">
+    <span>Watermark Remover, free for Linux.</span>
+    <a href="https://github.com/Hssnurrahman/watermark-remover/releases">All releases</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var sheet = document.getElementById('sheet');
+  var slider = document.getElementById('slider');
+  function set(v) { sheet.style.setProperty('--pos', v + '%'); }
+  slider.addEventListener('input', function () { sheet.classList.remove('intro-run'); set(slider.value); });
+  // one reveal on load: start fully watermarked, then wipe to the middle
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    set(100);
+    sheet.classList.add('intro-run');
+    setTimeout(function () { set(50); }, 600);
+    setTimeout(function () { sheet.classList.remove('intro-run'); }, 1600);
+  } else {
+    set(50);
+  }
+})();
+</script>
+</body>
+</html>
