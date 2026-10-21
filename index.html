@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Watermark Remover</title>
-<meta name="description" content="A free Linux app that removes site watermarks and logos from Urdu books and other PDFs without touching the text. Works offline.">
+<meta name="description" content="A free Linux app that removes site watermarks and logos from Urdu books, PDFs, scans and photos of pages without touching the text. Works offline.">
 <meta property="og:title" content="Watermark Remover">
-<meta property="og:description" content="Remove the watermark. Keep the book. A free Linux app for PDFs and scanned pages.">
+<meta property="og:description" content="Remove the watermark. Keep the book. A free Linux app for PDFs, scans and photos of pages.">
 <meta property="og:image" content="img/after.webp">
 <link rel="icon" href="img/icon-64.png">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
@@ -45,7 +45,7 @@ body {
   font: 400 1.0625rem/1.6 "Bricolage Grotesque", system-ui, sans-serif;
   font-optical-sizing: auto;
 }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; }
 main { overflow-x: clip; }
 a { color: var(--blue); }
 a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible + .handle {
@@ -137,6 +137,19 @@ h3 { font-size: 1.15rem; font-weight: 600; margin: 0 0 .35rem; letter-spacing: -
 .feats div { border-left: 3px solid var(--rule); padding-left: 1.1rem; }
 .feats div.key { border-left-color: var(--blue); }
 
+/* photos */
+.photos { display: grid; gap: 2.5rem; align-items: center; }
+@media (min-width: 56rem) { .photos { grid-template-columns: 1fr 1.15fr; gap: 4rem; } }
+.photos .intro { margin-bottom: 1.25rem; }
+.photos .small { max-width: var(--measure); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.pair figure { margin: 0; }
+.pair img {
+  width: 100%; height: auto; background: #fff;
+  box-shadow: 0 1px 2px rgba(20,26,38,.12), 0 14px 30px -12px rgba(20,26,38,.28);
+}
+.pair figcaption { margin-top: .6rem; text-align: center; }
+
 /* download */
 .dl { display: grid; gap: 2.5rem; }
 @media (min-width: 56rem) { .dl { grid-template-columns: 1fr 1.1fr; align-items: start; } }
@@ -180,7 +193,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     <div>
       <h1>Remove the watermark. Keep the book.</h1>
       <p class="urdu" lang="ur">واٹر مارک ہٹائیں، کتاب جوں کی توں رہے</p>
-      <p class="lede">A free Linux app that takes site URLs and logos off your PDFs and scanned pages. In most PDFs it deletes only the watermark, so the text, the Urdu script and the colours stay exactly as they were.</p>
+      <p class="lede">A free Linux app that takes site URLs and logos off your PDFs, scanned pages and photos of pages. In most PDFs it deletes only the watermark, so the text, the Urdu script and the colours stay exactly as they were.</p>
       <div class="cta">
         <a class="btn" href="https://github.com/Hssnurrahman/watermark-remover/releases/latest/download/WatermarkRemover-linux-x86_64.tar.gz">Download for Linux</a>
         <span class="small">Free, works offline, 165 MB</span>
@@ -204,7 +217,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <h2>Three steps, no settings to learn</h2>
       <p class="intro">Open the app, give it your files, and it works out what kind of watermark each one has.</p>
       <ol class="steps">
-        <li><h3>Add your files</h3><p>Drop in PDFs or images, or a whole folder with its subfolders.</p></li>
+        <li><h3>Add your files</h3><p>Drop in PDFs, photos or screenshots of pages, or a whole folder with its subfolders.</p></li>
         <li><h3>Check the preview</h3><p>See the original and the result side by side, page by page, before saving anything.</p></li>
         <li><h3>Clean</h3><p>Each file is saved next to the original as <em>name_clean.pdf</em>, or in a folder you choose. Your originals stay as they are.</p></li>
       </ol>
@@ -217,15 +230,35 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
   <section>
     <div class="wrap">
-      <h2>Made for books, not photos</h2>
-      <p class="intro">Built for pages of dark text on light paper, like the Urdu novels that download sites stamp on every page.</p>
+      <h2>Made for pages of text</h2>
+      <p class="intro">Built for dark text on light paper: the Urdu novels that download sites stamp on every page, scanned books, and pages you photograph with your phone.</p>
       <div class="feats">
         <div class="key"><h3>Original text quality</h3><p>In PDFs exported from Word or InPage, the watermark is a separate image. The app deletes it and leaves the text untouched, so you can still select it and the file often gets smaller.</p></div>
         <div class="key"><h3>Colours stay</h3><p>Only images that repeat over the text on many pages are removed. Covers, pictures, headers and borders keep their colour.</p></div>
-        <div><h3>Scanned books too</h3><p>For scans, the app finds where the watermark sits across pages and cleans just that area. Two sliders adjust strength and text boldness.</p></div>
+        <div><h3>Scans and photos of pages</h3><p>For scanned PDFs, the app finds where the watermark sits across pages and cleans just that area. Photos and screenshots of pages work too. Two sliders adjust strength and text boldness.</p></div>
         <div><h3>Add your own watermark</h3><p>Stamp your own text, in Urdu or any language, or your logo. Set its size, angle, opacity and position.</p></div>
         <div><h3>Design a new cover</h3><p>Replace page 1 with your own image or colour, plus a title and author. The app remembers your last design for the next book.</p></div>
         <div><h3>Private by design</h3><p>Everything runs on your computer. Nothing is uploaded, and you don't need an account or an internet connection.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="photos">
+    <div class="wrap photos">
+      <div>
+        <h2>Photos of pages work too</h2>
+        <p class="intro">Photograph a page with your phone, or take a screenshot, and add the JPG or PNG. The app removes the watermark and turns yellowed or shadowed paper clean white, so the result reads like a scan.</p>
+        <p class="small">Pictures come out in black and white, which suits text pages. Colour photographs, like people or places, aren't what it's made for.</p>
+      </div>
+      <div class="pair">
+        <figure>
+          <img src="img/photo-before.webp" alt="A phone photo of a page of Urdu verses on yellowed paper, with a blue logo and a red website address over it." width="600" height="850" loading="lazy">
+          <figcaption class="small">Phone photo</figcaption>
+        </figure>
+        <figure>
+          <img src="img/photo-after.webp" alt="The same photo after cleaning: white paper with only the Urdu verses." width="600" height="850" loading="lazy">
+          <figcaption class="small">Cleaned</figcaption>
+        </figure>
       </div>
     </div>
   </section>
@@ -275,6 +308,10 @@ cd WatermarkRemover-linux-x86_64
       <details>
         <summary>My cover is in colour. Will it turn black and white?</summary>
         <p>No. In digital PDFs, pictures that appear only once are kept. With scans, tick “Keep this page unchanged” on any page you want left as it is.</p>
+      </details>
+      <details>
+        <summary>Can it clean a photo or screenshot of a page?</summary>
+        <p>Yes. Add the JPG or PNG like any other file. The watermark is removed and the paper becomes white. The result is black and white, so it works best for pages of text rather than colour photographs.</p>
       </details>
       <details>
         <summary>Is there a Windows version?</summary>
